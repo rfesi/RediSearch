@@ -22,6 +22,8 @@ typedef struct SpellCheckCtx {
   const char **includeDict;
   const char **excludeDict;
   long long distance;
+  long long offsetLimit;
+  long long numLimit;
   bool fullScoreInfo;
   size_t results;
 } SpellCheckCtx;

@@ -1,6 +1,6 @@
 from RLTest import Env
 from includes import *
-from common import waitForIndex
+from common import getConnectionByEnv, waitForIndex, toSortedFlatList
 
 
 def testDictAdd():
@@ -202,3 +202,30 @@ def testSpellCheckIssue437():
                'Tooni toque kerfuffle', 'TERMS',
                'EXCLUDE', 'slang', 'TERMS',
                'INCLUDE', 'slang').equal([['TERM', 'tooni', [['0', 'toonie']]]])
+
+def testSpellCheckLimit(env):
+    conn = getConnectionByEnv(env)
+    env.expect('FT.CREATE test Schema t text')
+    env.cmd('FT.DICTADD hello_dict hi hello helo hallo halo hullo hulo hollu holu hillo hilo hilla hila')
+
+    resAll = env.cmd('FT.SPELLCHECK', 'test', 'hello',
+                     'DISTANCE', '3',
+                     'TERMS', 'INCLUDE', 'hello_dict')
+    # fully included
+    resLimited = env.cmd('FT.SPELLCHECK', 'test', 'hello',
+                         'DISTANCE', '3',
+                         'LIMIT', '3', '2',
+                         'TERMS', 'INCLUDE', 'hello_dict')
+    env.assertEqual(resAll[0][2][3:5], resLimited[0][2])
+    # partially included
+    resLimited = env.cmd('FT.SPELLCHECK', 'test', 'hello',
+                         'DISTANCE', '3',
+                         'LIMIT', '10', '5',
+                         'TERMS', 'INCLUDE', 'hello_dict')
+    env.assertEqual(resAll[0][2][10:15], resLimited[0][2])
+    # not included
+    resLimited = env.cmd('FT.SPELLCHECK', 'test', 'hello',
+                         'DISTANCE', '3',
+                         'LIMIT', '20', '1',
+                         'TERMS', 'INCLUDE', 'hello_dict')
+    env.assertEqual(resAll[0][2][20:21], resLimited[0][2])
