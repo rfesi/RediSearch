@@ -229,3 +229,10 @@ def testSpellCheckLimit(env):
                          'LIMIT', '20', '1',
                          'TERMS', 'INCLUDE', 'hello_dict')
     env.assertEqual(resAll[0][2][20:21], resLimited[0][2])
+    # errors
+    env.expect('FT.SPELLCHECK', 'test', 'hello', 'LIMIT', '20').error() \
+            .contains('LIMIT arg is given but no OFFSET and NUMBER come after')
+    env.expect('FT.SPELLCHECK', 'test', 'hello', 'LIMIT', 'str', '20').error() \
+            .contains('bad limit offset given, offset must not be a negative number')
+    env.expect('FT.SPELLCHECK', 'test', 'hello', 'LIMIT', '20', 'str').error() \
+            .contains('bad limit number given, number must not be a negative number')
